@@ -7,7 +7,8 @@ public class BlockController : MonoBehaviour, IPointerDownHandler, IPointerUpHan
     
     private Vector2 _touchStart;
     
-    public Vector2 PositionOnGrid { get; private set; }
+    public int TypeId { get; private set; }
+    public Vector2Int PositionOnGrid { get; private set; }
     
     
     void IPointerDownHandler.OnPointerDown(PointerEventData data)
@@ -26,18 +27,19 @@ public class BlockController : MonoBehaviour, IPointerDownHandler, IPointerUpHan
     }
     
     
-    public void Init(Vector2 positionOnGrid)
+    public void Init(int typeId, Vector2Int positionOnGrid)
     {
+        TypeId = typeId;
         PositionOnGrid = positionOnGrid;
     }
     
-    public void MoveToCell(Vector2 positionOnGrid)
+    public void MoveToCell(Vector2Int positionOnGrid)
     {
         PositionOnGrid = positionOnGrid;
         //TODO do move
     }
     
-    public void SetCoords(Vector2 positionOnGrid)
+    public void SetCoords(Vector2Int positionOnGrid)
     {
         PositionOnGrid = positionOnGrid;
     }
