@@ -1,5 +1,7 @@
 using UnityEngine;
 
+// Can be replaced to DI container like Zenject if need
+// MonoBehaviour inheriting logic is necessary without DI
 public class GridManager : MonoBehaviour
 {
     [SerializeField] private float _cellSize = 1;
