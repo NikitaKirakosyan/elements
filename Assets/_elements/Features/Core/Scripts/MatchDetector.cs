@@ -13,11 +13,12 @@ public static class MatchDetector
             if (grid[x, y] == null || used[x, y])
                 continue;
             
-            var t = grid[x, y].TypeId;
+            var blockType = grid[x, y].Type;
             var queue = new Queue<(int, int)>();
             var region = new List<(int, int)>();
             queue.Enqueue((x, y));
             used[x, y] = true;
+            
             while(queue.Count > 0)
             {
                 var (cx, cy) = queue.Dequeue();
@@ -26,11 +27,11 @@ public static class MatchDetector
                 foreach(var d in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
                 {
                     int nx = cx + d.Item1, ny = cy + d.Item2;
-                    if (nx < 0 || nx >= cols || ny < 0 || ny >= rows || used[nx, ny] || grid[nx, ny] == null || grid[nx, ny].TypeId != t)
-                        continue;
-                    
-                    used[nx, ny] = true;
-                    queue.Enqueue((nx, ny));
+                    if(nx >= 0 && nx < cols && ny >= 0 && ny < rows && !used[nx, ny] && grid[nx, ny] != null && grid[nx, ny].Type == blockType)
+                    {
+                        used[nx, ny] = true;
+                        queue.Enqueue((nx, ny));
+                    }
                 }
             }
             

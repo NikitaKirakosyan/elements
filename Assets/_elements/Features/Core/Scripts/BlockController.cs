@@ -1,19 +1,24 @@
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class BlockController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
+    [SerializeField] private BlockType _type;
     [SerializeField] private float _minSwipe = 0.5f;
+    [SerializeField] private float _moveDuration = 0.2f;
+    [SerializeField] private AnimationController _animationController;
     
     private Vector2 _touchStart;
+    private GridManager _grid;
     
-    public int TypeId { get; private set; }
+    public BlockType Type => _type;
     public Vector2Int PositionOnGrid { get; private set; }
     
     
     void IPointerDownHandler.OnPointerDown(PointerEventData data)
     {
-        _touchStart = data.position;
+        _touchStart = Input.mousePosition;
     }
     
     void IPointerUpHandler.OnPointerUp(PointerEventData data)
@@ -24,28 +29,37 @@ public class BlockController : MonoBehaviour, IPointerDownHandler, IPointerUpHan
             return;
         
         diff.Normalize();
+        
+        var dx = 0;
+        var dy = 0;
+        
+        if(Mathf.Abs(diff.x) > Mathf.Abs(diff.y))
+            dx = diff.x > 0 ? 1 : -1;
+        else
+            dy = diff.y > 0 ? 1 : -1;
+        
+        var nx = PositionOnGrid.x + dx;
+        var ny = PositionOnGrid.y + dy;
+        
+        if(nx >= 0 && nx < _grid.Columns && ny >= 0 && ny < _grid.Rows)
+            _grid.SwapCells(PositionOnGrid.x, PositionOnGrid.y, nx, ny);
     }
     
     
-    public void Init(int typeId, Vector2Int positionOnGrid)
+    public void Init(Vector2Int positionOnGrid, GridManager grid)
     {
-        TypeId = typeId;
         PositionOnGrid = positionOnGrid;
+        _grid = grid;
     }
     
     public void MoveToCell(Vector2Int positionOnGrid)
     {
         PositionOnGrid = positionOnGrid;
-        //TODO do move
-    }
-    
-    public void SetCoords(Vector2Int positionOnGrid)
-    {
-        PositionOnGrid = positionOnGrid;
+        transform.DOMove(new Vector3(_grid.Origin.x + PositionOnGrid.x * _grid.CellSize, _grid.Origin.y + PositionOnGrid.y * _grid.CellSize, 0), _moveDuration);
     }
     
     public void Die()
     {
-        Destroy(gameObject); //TODO add animation
+        _animationController.PlayDestroy(() => Destroy(gameObject));
     }
 }

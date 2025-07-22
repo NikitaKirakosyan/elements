@@ -5,10 +5,17 @@ public class AnimationController : MonoBehaviour
 {
     [SerializeField] private Animator _animator;
     
+    private Action onDestroyAnimationCompleteCallback;
+    
     
     private void Reset()
     {
         _animator = GetComponent<Animator>();
+    }
+    
+    private void Awake()
+    {
+        PlayIdle();
     }
     
     
@@ -19,10 +26,14 @@ public class AnimationController : MonoBehaviour
     
     public void PlayDestroy(Action onComplete)
     {
+        onDestroyAnimationCompleteCallback = onComplete;
         _animator.Play("Destroy");
-        Invoke(nameof(Finish), _animator.GetCurrentAnimatorStateInfo(0).length);
-        return;
-        
-        void Finish() => onComplete?.Invoke();
+        Invoke(nameof(OnDestroyAnimationFinished), _animator.GetCurrentAnimatorStateInfo(0).length);
+    }
+    
+    
+    private void OnDestroyAnimationFinished()
+    {
+        onDestroyAnimationCompleteCallback?.Invoke();
     }
 }

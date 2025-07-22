@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 2d987bbc9f4c1744698f932d6b006b8e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - _fireBlockPrefab: {fileID: 2647507422640295164, guid: 3f3a1eb678af5fd4081609419f704bdf, type: 3}
+  - _waterBlockPrefab: {fileID: 2511971115223709172, guid: a64fe00c4f769374fb699d0fc4d16b39, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

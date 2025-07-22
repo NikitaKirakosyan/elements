@@ -2,30 +2,56 @@ using UnityEngine;
 
 public class GridManager : MonoBehaviour
 {
-    [SerializeField] private  int _columns = 6;
-    [SerializeField] private  int _rows = 10;
-    [SerializeField] private  float _cellSize = 1;
+    [SerializeField] private float _cellSize = 1;
     [SerializeField] private Vector2 _origin = Vector2.zero;
     
     private BlockController[,] _grid;
+    private int _columns;
+    private int _rows;
+    
+    public int Columns => _columns;
+    public int Rows => _rows;
+    public float CellSize => _cellSize;
+    public Vector2 Origin => _origin;
     
     
     private void Awake()
     {
-        InitGrid();
         LoadLevel(1); //TODO
         NormalizeField();
     }
     
-    
     public void LoadLevel(int levelIndex)
     {
-        //TODO
+        var levelData = LevelData.Load(levelIndex);
+        
+        _columns = levelData.Columns;
+        _rows = levelData.Rows;
+        _grid = new BlockController[_columns, _rows];
+        
+        for (var x = 0; x < _columns; x++)
+        {
+            for (var y = 0; y < _rows; y++)
+            {
+                var type = levelData.GetTypeAt(x, y);
+                if(type == BlockType.None)
+                {
+                    _grid[x, y] = null;
+                    continue;
+                }
+                
+                var pos = new Vector3(_origin.x + x * _cellSize, _origin.y + y * _cellSize, 0);
+                var blockPrefab = levelData.GetBlockByType(type);
+                var block = Instantiate(blockPrefab, pos, Quaternion.identity, transform);
+                block.Init(new Vector2Int(x, y), this);
+                _grid[x, y] = block;
+            }
+        }
     }
     
     public void NormalizeField()
     {
-        //Lower the hanging blocks
+        // Lower down blocks
         for (var x = 0; x < _columns; x++)
         {
             for (var y = 0; y < _rows; y++)
@@ -46,7 +72,7 @@ public class GridManager : MonoBehaviour
             }
         }
         
-        //Find & Remove matches
+        // Find and remove matches
         var matches = MatchDetector.FindMatches(_grid, _columns, _rows);
         if (matches.Count > 0)
         {
@@ -56,7 +82,7 @@ public class GridManager : MonoBehaviour
                 _grid[b.PositionOnGrid.x, b.PositionOnGrid.y] = null;
             }
             
-            //TODO do save system
+            //TODO add save system
             NormalizeField();
         }
     }
@@ -65,17 +91,13 @@ public class GridManager : MonoBehaviour
     {
         var b1 = _grid[x1, y1];
         var b2 = _grid[x2, y2];
-        if (b1 == null || b2 == null) return;
+        if (b1 == null || b2 == null)
+            return;
+        
         _grid[x2, y2] = b1;
         _grid[x1, y1] = b2;
-        b1.SetCoords(new Vector2Int(x2, y2));
-        b2.SetCoords(new Vector2Int(x1, y2));
+        b1.MoveToCell(new Vector2Int(x2, y2));
+        b2.MoveToCell(new Vector2Int(x1, y1));
         NormalizeField();
-    }
-    
-    
-    private void InitGrid()
-    {
-        _grid = new BlockController[_columns, _rows];
     }
 }
