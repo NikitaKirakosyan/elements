@@ -12,9 +12,11 @@ public class BlockController : MonoBehaviour, IPointerDownHandler, IPointerUpHan
     
     private Vector2 _touchStart;
     private GridManager _grid;
+    private bool _isAnimating;
     
     public BlockType Type => _type;
     public Vector2Int PositionOnGrid { get; private set; }
+    public bool IsAnimating => _isAnimating;
     
     
     private void Reset()
@@ -26,11 +28,17 @@ public class BlockController : MonoBehaviour, IPointerDownHandler, IPointerUpHan
     
     void IPointerDownHandler.OnPointerDown(PointerEventData data)
     {
+        if(_isAnimating)
+            return;
+        
         _touchStart = Input.mousePosition;
     }
     
     void IPointerUpHandler.OnPointerUp(PointerEventData data)
     {
+        if(_isAnimating)
+            return;
+        
         //Do swipe logic
         var diff = data.position - _touchStart;
         if (diff.magnitude < _minSwipe * Screen.dpi)
@@ -63,15 +71,18 @@ public class BlockController : MonoBehaviour, IPointerDownHandler, IPointerUpHan
     
     public Tween MoveToCell(Vector2Int positionOnGrid)
     {
+        _isAnimating = true;
+        
         PositionOnGrid = positionOnGrid;
         UpdateSorting();
         
         var targetLocal = new Vector3(_grid.Origin.x + PositionOnGrid.x * _grid.CellSize, _grid.Origin.y + PositionOnGrid.y * _grid.CellSize, 0f);
-        return transform.DOLocalMove(targetLocal, _moveDuration);
+        return transform.DOLocalMove(targetLocal, _moveDuration).OnComplete(() => _isAnimating = false);
     }
     
     public Tween Die()
     {
+        _isAnimating = true;
         return _animationController.PlayDestroy(() => Destroy(gameObject));
     }
     

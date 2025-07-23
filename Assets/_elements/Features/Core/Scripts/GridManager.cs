@@ -31,11 +31,13 @@ public class GridManager : MonoBehaviour
         _currentLevelIndex = SaveManager.GetLastStartedLevel();
         
         if(SaveManager.TryLoad(out var lastLevelIndex, out var types))
+        {
             LoadLevel(lastLevelIndex, types);
-        else
-            Play(_currentLevelIndex);
+            StartCoroutine(NormalizeFieldRoutine());
+            return;
+        }
         
-        StartCoroutine(NormalizeFieldRoutine());
+        Play(_currentLevelIndex);
     }
     
     
@@ -59,19 +61,22 @@ public class GridManager : MonoBehaviour
     public void SwapCells(int x1, int y1, int x2, int y2)
     {
         var b1 = _grid[x1, y1];
-        if(b1 == null)
+        if (b1 == null || b1.IsAnimating)
             return;
         
         var b2 = _grid[x2, y2];
+        if (b2 != null && b2.IsAnimating)
+            return;
         
         _grid[x2, y2] = b1;
         _grid[x1, y1] = b2;
         
-        b1.MoveToCell(new Vector2Int(x2, y2));
+        var seq = DOTween.Sequence();
+        seq.Join(b1.MoveToCell(new Vector2Int(x2, y2)));
         if (b2 != null)
-            b2.MoveToCell(new Vector2Int(x1, y1));
+            seq.Join(b2.MoveToCell(new Vector2Int(x1, y1)));
         
-        StartCoroutine(NormalizeFieldRoutine());
+        seq.OnComplete(() => StartCoroutine(NormalizeFieldRoutine()));
     }
     
     
@@ -153,20 +158,20 @@ public class GridManager : MonoBehaviour
         {
             for(var y = 0; y < _rows; y++)
             {
-                if(_grid[x, y] == null)
+                if(_grid[x, y] != null)
+                    continue;
+                
+                for(var k = y + 1; k < _rows; k++)
                 {
-                    for(var k = y + 1; k < _rows; k++)
-                    {
-                        if(_grid[x, k] != null)
-                        {
-                            var block = _grid[x, k];
-                            _grid[x, y] = block;
-                            _grid[x, k] = null;
-                            var moveTween = block.MoveToCell(new Vector2Int(x, y));
-                            moveTweens.Add(moveTween.OnComplete(() => moveTweens.Remove(moveTween)));
-                            break;
-                        }
-                    }
+                    if(_grid[x, k] == null)
+                        continue;
+                    
+                    var block = _grid[x, k];
+                    _grid[x, y] = block;
+                    _grid[x, k] = null;
+                    var moveTween = block.MoveToCell(new Vector2Int(x, y));
+                    moveTweens.Add(moveTween.OnComplete(() => moveTweens.Remove(moveTween)));
+                    break;
                 }
             }
         }
