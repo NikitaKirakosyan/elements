@@ -483,8 +483,8 @@ MonoBehaviour:
   _balloonPrefabs:
   - {fileID: 4146229002362536093, guid: 73232204ea47e3446a2e735ac402c959, type: 3}
   - {fileID: 9035942495130918445, guid: 7244a361e33721442b13785c0e4cbae8, type: 3}
-  _spawnMin: {x: -4, y: -13}
-  _spawnMax: {x: 4, y: -11}
+  _spawnMin: {x: -5, y: -13}
+  _spawnMax: {x: 5, y: -11}
 --- !u!1 &1893394995
 GameObject:
   m_ObjectHideFlags: 0

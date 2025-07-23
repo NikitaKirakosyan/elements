@@ -1,4 +1,5 @@
 using System;
+using DG.Tweening;
 using UnityEngine;
 
 public class AnimationController : MonoBehaviour
@@ -24,11 +25,11 @@ public class AnimationController : MonoBehaviour
         _animator.Play("Idle");
     }
     
-    public void PlayDestroy(Action onComplete)
+    public Tween PlayDestroy(Action onComplete)
     {
         onDestroyAnimationCompleteCallback = onComplete;
         _animator.Play("Destroy");
-        Invoke(nameof(OnDestroyAnimationFinished), _animator.GetCurrentAnimatorStateInfo(0).length);
+        return DOVirtual.DelayedCall(_animator.GetCurrentAnimatorStateInfo(0).length, OnDestroyAnimationFinished);
     }
     
     

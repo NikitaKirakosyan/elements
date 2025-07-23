@@ -52,14 +52,14 @@ public class BlockController : MonoBehaviour, IPointerDownHandler, IPointerUpHan
         _grid = grid;
     }
     
-    public void MoveToCell(Vector2Int positionOnGrid)
+    public Tween MoveToCell(Vector2Int positionOnGrid)
     {
         PositionOnGrid = positionOnGrid;
-        transform.DOMove(new Vector3(_grid.Origin.x + PositionOnGrid.x * _grid.CellSize, _grid.Origin.y + PositionOnGrid.y * _grid.CellSize, 0), _moveDuration);
+        return transform.DOMove(new Vector3(_grid.Origin.x + PositionOnGrid.x * _grid.CellSize, _grid.Origin.y + PositionOnGrid.y * _grid.CellSize, 0), _moveDuration);
     }
     
-    public void Die()
+    public Tween Die()
     {
-        _animationController.PlayDestroy(() => Destroy(gameObject));
+        return _animationController.PlayDestroy(() => Destroy(gameObject));
     }
 }
