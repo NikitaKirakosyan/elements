@@ -65,7 +65,9 @@ public class BlockController : MonoBehaviour, IPointerDownHandler, IPointerUpHan
     {
         PositionOnGrid = positionOnGrid;
         UpdateSorting();
-        return transform.DOMove(new Vector3(_grid.Origin.x + PositionOnGrid.x * _grid.CellSize, _grid.Origin.y + PositionOnGrid.y * _grid.CellSize, 0), _moveDuration);
+        
+        var targetLocal = new Vector3(_grid.Origin.x + PositionOnGrid.x * _grid.CellSize, _grid.Origin.y + PositionOnGrid.y * _grid.CellSize, 0f);
+        return transform.DOLocalMove(targetLocal, _moveDuration);
     }
     
     public Tween Die()
