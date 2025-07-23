@@ -22,18 +22,11 @@ public class GridManager : MonoBehaviour
     public int Rows => _rows;
     public float CellSize => _cellSize;
     public Vector2 Origin => _origin;
+    public int CurrentLevelIndex => _currentLevelIndex;
     
     
     private void Awake()
     {
-        Play();
-    }
-    
-    
-    public void Play()
-    {
-        _currentLevelIndex = SaveManager.GetLastCompletedLevel();
-        
         if(SaveManager.TryLoad(out var lastLevelIndex, out var types))
         {
             if(_currentLevelIndex > lastLevelIndex)
@@ -43,10 +36,28 @@ public class GridManager : MonoBehaviour
         }
         else
         {
-            LoadLevel(0);
+            Play(0);
         }
         
+        PlayLastStartedLevel();
+    }
+    
+    
+    public void Play(int levelIndex)
+    {
+        StopAllCoroutines();
+        
+        foreach(Transform t in transform)
+            Destroy(t.gameObject);
+        
+        LoadLevel(levelIndex);
         StartCoroutine(NormalizeFieldRoutine());
+    }
+    
+    public void Restart()
+    {
+        SaveManager.ClearSaveState();
+        PlayLastStartedLevel();
     }
     
     public void SwapCells(int x1, int y1, int x2, int y2)
@@ -60,16 +71,26 @@ public class GridManager : MonoBehaviour
         _grid[x1, y1] = b2;
         b1.MoveToCell(new Vector2Int(x2, y2));
         b2.MoveToCell(new Vector2Int(x1, y1));
-        NormalizeFieldRoutine();
+        StartCoroutine(NormalizeFieldRoutine());
     }
     
+    
+    private void PlayLastStartedLevel()
+    {
+        _currentLevelIndex = SaveManager.GetLastStartedLevel();
+        Play(_currentLevelIndex);
+    }
     
     private void LoadLevel(int levelIndex, BlockType[,] types = null)
     {
         var levelsCount = LevelData.GetLevelsCount();
-        levelIndex = Mathf.Clamp(levelIndex, 0, levelsCount - 1);
+        if(levelIndex >= levelsCount - 1)
+            levelIndex = 0;
         
-        var levelData = LevelData.Load(levelIndex);
+        _currentLevelIndex = levelIndex;
+        SaveManager.SaveLastStartedLevel(_currentLevelIndex);
+        
+        var levelData = LevelData.Load(_currentLevelIndex);
         
         _columns = levelData.Columns;
         _rows = levelData.Rows;
@@ -136,13 +157,12 @@ public class GridManager : MonoBehaviour
                 destroyTweens.Add(destroyTween.OnComplete(() => destroyTweens.Remove(destroyTween)));
             }
             
-            SaveManager.SaveLastCompletedLevel(_currentLevelIndex);
-            SaveManager.SaveState(_currentLevelIndex, _grid);
-            
             yield return new WaitWhile(() => destroyTweens.Count > 0);
             yield return NormalizeFieldRoutine();
             yield break;
         }
+        
+        SaveManager.SaveState(_currentLevelIndex, _grid);
         
         var anyLeft = false;
         for(var x = 0; x < _columns && !anyLeft; x++)
@@ -155,9 +175,12 @@ public class GridManager : MonoBehaviour
         
         if(!anyLeft)
         {
-            SaveManager.SaveLastCompletedLevel(_currentLevelIndex + 1);
+            _currentLevelIndex++;
+            
+            SaveManager.SaveLastStartedLevel(_currentLevelIndex);
             OnLevelCompleted?.Invoke();
-            Play();
+            
+            Play(_currentLevelIndex);
         }
     }
 }

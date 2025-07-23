@@ -4,19 +4,19 @@ using UnityEngine;
 
 public static class SaveManager
 {
-    private const string LastCompletedLevelKey = "LastCompletedLevel";
+    private const string LastStartedLevelKey = "LastCompletedLevel";
     private const string SaveKey = "save";
     
     
-    public static void SaveLastCompletedLevel(int level)
+    public static void SaveLastStartedLevel(int level)
     {
-        PlayerPrefs.SetInt(LastCompletedLevelKey, level);
+        PlayerPrefs.SetInt(LastStartedLevelKey, level);
         PlayerPrefs.Save();
     }
     
-    public static int GetLastCompletedLevel()
+    public static int GetLastStartedLevel()
     {
-        return PlayerPrefs.GetInt(LastCompletedLevelKey, 0);
+        return PlayerPrefs.GetInt(LastStartedLevelKey, 0);
     }
     
     public static void SaveState(int level, BlockController[,] grid)
@@ -65,6 +65,11 @@ public static class SaveManager
             types[x, y] = (BlockType)Enum.Parse(typeof(BlockType), parts[index++]);
         
         return true;
+    }
+    
+    public static void ClearSaveState()
+    {
+        PlayerPrefs.DeleteKey(SaveKey);
     }
     
 #if UNITY_EDITOR
