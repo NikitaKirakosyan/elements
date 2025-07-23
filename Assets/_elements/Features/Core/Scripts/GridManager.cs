@@ -63,14 +63,18 @@ public class GridManager : MonoBehaviour
     public void SwapCells(int x1, int y1, int x2, int y2)
     {
         var b1 = _grid[x1, y1];
-        var b2 = _grid[x2, y2];
-        if (b1 == null || b2 == null)
+        if(b1 == null)
             return;
+        
+        var b2 = _grid[x2, y2];
         
         _grid[x2, y2] = b1;
         _grid[x1, y1] = b2;
+        
         b1.MoveToCell(new Vector2Int(x2, y2));
-        b2.MoveToCell(new Vector2Int(x1, y1));
+        if (b2 != null)
+            b2.MoveToCell(new Vector2Int(x1, y1));
+        
         StartCoroutine(NormalizeFieldRoutine());
     }
     
