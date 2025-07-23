@@ -28,19 +28,14 @@ public class GridManager : MonoBehaviour
     
     private void Awake()
     {
-        if(SaveManager.TryLoad(out var lastLevelIndex, out var types))
-        {
-            if(_currentLevelIndex > lastLevelIndex)
-                LoadLevel(_currentLevelIndex);
-            else
-                LoadLevel(lastLevelIndex, types);
-        }
-        else
-        {
-            Play(0);
-        }
+        _currentLevelIndex = SaveManager.GetLastStartedLevel();
         
-        PlayLastStartedLevel();
+        if(SaveManager.TryLoad(out var lastLevelIndex, out var types))
+            LoadLevel(lastLevelIndex, types);
+        else
+            Play(_currentLevelIndex);
+        
+        StartCoroutine(NormalizeFieldRoutine());
     }
     
     
@@ -139,13 +134,11 @@ public class GridManager : MonoBehaviour
                 }
                 
                 var blockPrefab = levelData.GetBlockByType(type);
-                var block = Instantiate(blockPrefab);
-                block.transform.SetParent(transform, false);
-                block.transform.localPosition = new Vector3(
-                               _origin.x + x * _cellSize,
-                               _origin.y + y * _cellSize,
-                               0f);
+                var block = Instantiate(blockPrefab, transform, false);
+                
+                block.transform.localPosition = new Vector3(_origin.x + x * _cellSize, _origin.y + y * _cellSize, 0f);
                 block.Init(new Vector2Int(x, y), this);
+                
                 _grid[x, y] = block;
             }
         }
@@ -191,6 +184,8 @@ public class GridManager : MonoBehaviour
                 var destroyTween = matchedBlock.Die();
                 destroyTweens.Add(destroyTween.OnComplete(() => destroyTweens.Remove(destroyTween)));
             }
+            
+            SaveManager.SaveState(_currentLevelIndex, _grid);
             
             yield return new WaitWhile(() => destroyTweens.Count > 0);
             yield return NormalizeFieldRoutine();
