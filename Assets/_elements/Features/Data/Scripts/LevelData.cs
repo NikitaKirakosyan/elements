@@ -9,6 +9,8 @@ public class LevelData : ScriptableObject
     [SerializeField] private int _rows = 10;
     [SerializeField] private BlockType[] _types; // length = columns*rows
     
+    private static int LevelsCount = -1;
+    
     public int Columns => _columns;
     public int Rows => _rows;
     
@@ -16,6 +18,14 @@ public class LevelData : ScriptableObject
     public static LevelData Load(int index)
     {
         return Resources.Load<LevelData>($"Levels/level_{index:000}");
+    }
+    
+    public static int GetLevelsCount()
+    {
+        if(LevelsCount == -1)
+            LevelsCount = Resources.LoadAll<LevelData>("Levels/").Length;
+        
+        return LevelsCount;
     }
     
     
