@@ -1,11 +1,13 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 public static class MatchDetector
 {
     public static List<BlockController> FindMatches(BlockController[,] grid, int cols, int rows)
     {
-        var matches = new HashSet<BlockController>();
+        var initial = new HashSet<BlockController>();
         
+        // 1) Find all horizontal segments ≥3
         for(var y = 0; y < rows; y++)
         {
             var runLen = 1;
@@ -13,26 +15,26 @@ public static class MatchDetector
             {
                 var same = x < cols
                            && grid[x, y] != null
-                           && grid[x-1, y] != null
-                           && grid[x, y].Type == grid[x-1, y].Type;
+                           && grid[x - 1, y] != null
+                           && grid[x, y].Type == grid[x - 1, y].Type;
                 
                 if(same)
                 {
                     runLen++;
+                    continue;
                 }
-                else
+                
+                if(runLen >= 3)
                 {
-                    if(runLen >= 3)
-                    {
-                        for (var k = x - runLen; k < x; k++)
-                            matches.Add(grid[k, y]);
-                    }
-                    
-                    runLen = 1;
+                    for(var k = x - runLen; k < x; k++)
+                        initial.Add(grid[k, y]);
                 }
+                
+                runLen = 1;
             }
         }
         
+        // 2) Find all vertical segments ≥3
         for(var x = 0; x < cols; x++)
         {
             var runLen = 1;
@@ -40,26 +42,72 @@ public static class MatchDetector
             {
                 var same = y < rows
                            && grid[x, y] != null
-                           && grid[x, y-1] != null
-                           && grid[x, y].Type == grid[x, y-1].Type;
+                           && grid[x, y - 1] != null
+                           && grid[x, y].Type == grid[x, y - 1].Type;
                 
                 if(same)
                 {
                     runLen++;
+                    continue;
                 }
-                else
+                
+                if(runLen >= 3)
                 {
-                    if(runLen >= 3)
-                    {
-                        for (var k = y - runLen; k < y; k++)
-                            matches.Add(grid[x, k]);
-                    }
+                    for(var k = y - runLen; k < y; k++)
+                        initial.Add(grid[x, k]);
+                }
+                
+                runLen = 1;
+            }
+        }
+        
+        // 3) Expand the area from each “tie” block
+        var result  = new List<BlockController>();
+        var visited = new HashSet<BlockController>();
+        var queue = new Queue<BlockController>();
+        
+        foreach(var start in initial)
+        {
+            if(!visited.Add(start))
+                continue;
+            
+            queue.Clear();
+            queue.Enqueue(start);
+            
+            while(queue.Count > 0)
+            {
+                var b = queue.Dequeue();
+                result.Add(b);
+                var pos = b.PositionOnGrid;
+                
+                var neighbourPositions = new[]
+                {
+                    new Vector2Int(1, 0),
+                    new Vector2Int(-1, 0),
+                    new Vector2Int(0, 1),
+                    new Vector2Int(0, -1)
+                };
+                
+                foreach (var d in neighbourPositions)
+                {
+                    int nx = pos.x + d.x, ny = pos.y + d.y;
+                    if(nx < 0 || nx >= cols || ny < 0 || ny >= rows)
+                        continue;
                     
-                    runLen = 1;
+                    var nb = grid[nx, ny];
+                    
+                    if(nb == null || visited.Contains(nb))
+                        continue;
+                    
+                    if(nb.Type != start.Type)
+                        continue;
+                    
+                    visited.Add(nb);
+                    queue.Enqueue(nb);
                 }
             }
         }
         
-        return new List<BlockController>(matches);
+        return result;
     }
 }
