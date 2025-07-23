@@ -896,7 +896,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _cellSize: 2
-  _origin: {x: -4, y: -5}
+  _marginLeft: 1
+  _marginRight: 1
+  _marginTop: 0
+  _marginBottom: 3.5
 --- !u!4 &925629636
 Transform:
   m_ObjectHideFlags: 0

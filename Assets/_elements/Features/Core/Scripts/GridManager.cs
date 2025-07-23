@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
@@ -8,11 +7,13 @@ using UnityEngine;
 // MonoBehaviour inheriting logic is necessary without DI
 public class GridManager : MonoBehaviour
 {
-    public event Action OnLevelCompleted;
-    
     [SerializeField] private float _cellSize = 1;
-    [SerializeField] private Vector2 _origin = Vector2.zero;
+    [SerializeField] private float _marginLeft   = 1;
+    [SerializeField] private float _marginRight  = 1;
+    [SerializeField] private float _marginTop;
+    [SerializeField] private float _marginBottom = 3.5f;
     
+    private Vector2 _origin;
     private BlockController[,] _grid;
     private int _columns;
     private int _rows;
@@ -79,6 +80,30 @@ public class GridManager : MonoBehaviour
     }
     
     
+    private void FitGrid()
+    {
+        var cam = Camera.main;
+        var worldH = cam.orthographicSize * 2f;
+        var worldW = worldH * cam.aspect;
+        
+        var gridW = _columns * _cellSize;
+        var gridH = _rows * _cellSize;
+        
+        var availW = worldW - _marginLeft - _marginRight;
+        var availH = worldH - _marginTop - _marginBottom;
+        var scale  = Mathf.Min(availW / gridW, availH / gridH);
+        transform.localScale = Vector3.one * scale;
+        
+        var camBottom = cam.transform.position.y - cam.orthographicSize;
+        
+        var yPos = camBottom + _marginBottom + (gridH * scale) * 0.5f;
+        var xPos = cam.transform.position.x;
+        
+        transform.position = new Vector3(xPos, yPos, transform.position.z);
+        
+        _origin = new Vector2(-gridW * 0.5f + _cellSize * 0.5f, -gridH * 0.5f + _cellSize * 0.5f);
+    }
+    
     private void PlayLastStartedLevel()
     {
         _currentLevelIndex = SaveManager.GetLastStartedLevel();
@@ -100,6 +125,8 @@ public class GridManager : MonoBehaviour
         _rows = levelData.Rows;
         _grid = new BlockController[_columns, _rows];
         
+        FitGrid();
+        
         for (var x = 0; x < _columns; x++)
         {
             for (var y = 0; y < _rows; y++)
@@ -111,9 +138,13 @@ public class GridManager : MonoBehaviour
                     continue;
                 }
                 
-                var pos = new Vector3(_origin.x + x * _cellSize, _origin.y + y * _cellSize, 0);
                 var blockPrefab = levelData.GetBlockByType(type);
-                var block = Instantiate(blockPrefab, pos, Quaternion.identity, transform);
+                var block = Instantiate(blockPrefab);
+                block.transform.SetParent(transform, false);
+                block.transform.localPosition = new Vector3(
+                               _origin.x + x * _cellSize,
+                               _origin.y + y * _cellSize,
+                               0f);
                 block.Init(new Vector2Int(x, y), this);
                 _grid[x, y] = block;
             }
@@ -180,9 +211,7 @@ public class GridManager : MonoBehaviour
         if(!anyLeft)
         {
             _currentLevelIndex++;
-            
             SaveManager.SaveLastStartedLevel(_currentLevelIndex);
-            OnLevelCompleted?.Invoke();
             
             Play(_currentLevelIndex);
         }
