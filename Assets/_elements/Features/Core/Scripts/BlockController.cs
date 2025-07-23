@@ -8,12 +8,20 @@ public class BlockController : MonoBehaviour, IPointerDownHandler, IPointerUpHan
     [SerializeField] private float _minSwipe = 0.5f;
     [SerializeField] private float _moveDuration = 0.2f;
     [SerializeField] private AnimationController _animationController;
+    [SerializeField] private SpriteRenderer _spriteRenderer;
     
     private Vector2 _touchStart;
     private GridManager _grid;
     
     public BlockType Type => _type;
     public Vector2Int PositionOnGrid { get; private set; }
+    
+    
+    private void Reset()
+    {
+        _animationController = GetComponent<AnimationController>();
+        _spriteRenderer = GetComponent<SpriteRenderer>();
+    }
     
     
     void IPointerDownHandler.OnPointerDown(PointerEventData data)
@@ -50,16 +58,24 @@ public class BlockController : MonoBehaviour, IPointerDownHandler, IPointerUpHan
     {
         PositionOnGrid = positionOnGrid;
         _grid = grid;
+        UpdateSorting();
     }
     
     public Tween MoveToCell(Vector2Int positionOnGrid)
     {
         PositionOnGrid = positionOnGrid;
+        UpdateSorting();
         return transform.DOMove(new Vector3(_grid.Origin.x + PositionOnGrid.x * _grid.CellSize, _grid.Origin.y + PositionOnGrid.y * _grid.CellSize, 0), _moveDuration);
     }
     
     public Tween Die()
     {
         return _animationController.PlayDestroy(() => Destroy(gameObject));
+    }
+    
+    
+    private void UpdateSorting()
+    {
+        _spriteRenderer.sortingOrder = (_grid.Rows + PositionOnGrid.y) * _grid.Columns + PositionOnGrid.x;
     }
 }

@@ -175,6 +175,7 @@ MonoBehaviour:
   _minSwipe: 0.5
   _moveDuration: 0.2
   _animationController: {fileID: 2031048198076749216}
+  _spriteRenderer: {fileID: 6922843049130603632}
 --- !u!114 &2031048198076749216
 MonoBehaviour:
   m_ObjectHideFlags: 0
